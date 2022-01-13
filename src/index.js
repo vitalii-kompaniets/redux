@@ -4,21 +4,25 @@ import {
   titleChanged,
   taskDeleted,
   completeTask,
+  loadTasks,
   getTasks,
+  getTasksLoadingStatus,
+  taskCreated,
 } from "./store/task";
 import configureStore from "./store/store";
 import { Provider, useSelector, useDispatch } from "react-redux";
+import { getError } from "./store/errors";
 
 const store = configureStore();
 
 const App = (params) => {
-  const state = useSelector((state) => state.entities);
-  const isLoading = useSelector((state) => state.isLoading);
-  const error = useSelector((state) => state.error);
+  const state = useSelector(getTasks());
+  const isLoading = useSelector(getTasksLoadingStatus());
+  const error = useSelector(getError());
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(getTasks());
+    dispatch(loadTasks());
   }, []);
 
   const changeTitle = (taskId) => {
@@ -27,6 +31,10 @@ const App = (params) => {
 
   const deleteTask = (taskId) => {
     dispatch(taskDeleted(taskId));
+  };
+
+  const createTask = () => {
+    dispatch(taskCreated());
   };
 
   if (isLoading) {
@@ -40,6 +48,7 @@ const App = (params) => {
   return (
     <>
       <h1>App</h1>
+      <button onClick={() => createTask()}>Add task</button>
       <ul>
         {state.map((el) => (
           <li key={el.id}>

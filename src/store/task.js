@@ -1,7 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
 import todosService from "../services/todos.service";
+import { setError } from "./errors";
 
-const initialState = { entities: [], isLoading: true, error: null };
+const initialState = { entities: [], isLoading: true };
 
 const taskSlice = createSlice({
   name: "task",
@@ -25,26 +26,35 @@ const taskSlice = createSlice({
         (el) => el.id !== action.payload.id
       );
     },
+
+    create(state, action) {
+      state.entities.unshift({
+        id: Math.random(),
+        title: "Some new title",
+        completed: false,
+      });
+    },
     taskRequested(state) {
       state.isLoading = true;
     },
     taskRequestFailed(state, action) {
-      state.error = action.payload;
       state.isLoading = false;
     },
   },
 });
 
 const { actions, reducer: taskReducer } = taskSlice;
-const { update, remove, received, taskRequested, taskRequestFailed } = actions;
+const { update, remove, received, create, taskRequested, taskRequestFailed } =
+  actions;
 
-export const getTasks = () => async (dispatch) => {
+export const loadTasks = () => async (dispatch) => {
   dispatch(taskRequested());
   try {
     const data = await todosService.fetch();
     dispatch(received(data));
   } catch (error) {
-    dispatch(taskRequestFailed(error.message));
+    dispatch(taskRequestFailed());
+    dispatch(setError(error.message));
   }
 };
 
@@ -59,5 +69,12 @@ export function titleChanged(id) {
 export function taskDeleted(id) {
   return remove({ id });
 }
+
+export function taskCreated() {
+  return create();
+}
+
+export const getTasks = () => (state) => state.tasks.entities;
+export const getTasksLoadingStatus = () => (state) => state.tasks.isLoading;
 
 export default taskReducer;
